@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #pragma comment(lib, "Urlmon.lib")
@@ -48,7 +49,7 @@ bool check_upper_height(PresTempHum obj) {
     return true;
 }
 
-PresTempHum filter_row(std::vector<double> row) {
+PresTempHum filter_row(std::vector<double>& row) {
     PresTempHum obj = { row[1], row[2], row[3], row[5]};
     return obj;
 }
@@ -78,8 +79,16 @@ std::wstring url_input() {
     return url_addr;
 }
 
+void search_for_observation_time(std::string_view str) {
+    auto pos = str.find("Observations at ");
+    if (pos != std::string::npos) {
+        pos += 16; //plus length of string 'Observations at '
+        std::cout << "Found: " << str[pos] << str[pos + 1] << str[pos + 2] << '\n';
+    }
+}
+
 int main() {
-#if 1
+#if 0
     // the URL to download from 
     std::wstring url_addr = url_input();
 
@@ -95,7 +104,7 @@ int main() {
     }
 #endif
 
-#if 0
+#if 1
     std::fstream newfile;
     /*newfile.open("myfile.txt", std::ios::out);
     if (newfile.is_open()) {
@@ -110,6 +119,7 @@ int main() {
         std::string tp;
         std::vector<double> row;
         while (std::getline(newfile, tp)) {
+            search_for_observation_time(tp);
             if (is_number_row(tp)) {
                 row = string_to_vector(tp);
                 if (row.size() == 11)
@@ -118,7 +128,7 @@ int main() {
         }
         newfile.close();
     }
-    for (auto&& el : sound)
-        el.dump();
+    /*for (auto&& el : sound)
+        el.dump();*/
 #endif
 }
