@@ -21,19 +21,17 @@ struct PresTempHum {
     }
 };
 
-bool is_number_row(std::string str) {
+bool is_number_row(std::string_view str) {
     if (str.empty()) return 0;
-    std::stringstream ss(str);
-    char c;
-    while (ss.get(c) && (c != '\n')) {
-        if (!std::isdigit(c) && !std::isspace(c) && (c != '.') && (c != '-')) {
+    size_t i = 0;
+    for (auto& c: str) {
+        if (!std::isdigit(c) && !std::isspace(c) && (c != '.') && (c != '-'))
             return false;
-        }
     }
     return true;
 }
 
-std::vector<double> string_to_vector(std::string str) {
+std::vector<double> string_to_vector(const std::string& str) {
     double number;
     std::vector<double> row;
     row.reserve(11);
@@ -119,7 +117,6 @@ int main() {
         std::string tp;
         std::vector<double> row;
         while (std::getline(newfile, tp)) {
-            search_for_observation_time(tp);
             if (is_number_row(tp)) {
                 row = string_to_vector(tp);
                 if (row.size() == 11)
@@ -128,7 +125,7 @@ int main() {
         }
         newfile.close();
     }
-    /*for (auto&& el : sound)
-        el.dump();*/
+    for (auto& el : sound)
+        el.dump();
 #endif
 }
