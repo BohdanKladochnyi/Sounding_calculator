@@ -5,6 +5,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <charconv>
 
 #pragma comment(lib, "Urlmon.lib")
 
@@ -77,12 +78,14 @@ std::wstring url_input() {
     return url_addr;
 }
 
-void search_for_observation_time(std::string_view str) {
-    auto pos = str.find("Observations at ");
-    if (pos != std::string::npos) {
-        pos += 16; //plus length of string 'Observations at '
-        std::cout << "Found: " << str[pos] << str[pos + 1] << str[pos + 2] << '\n';
-    }
+std::string::size_type search_for_observation_time(std::string_view str) {
+    return str.find("Observations at ");
+}
+
+int convert_hours(std::string_view str, std::string::size_type pos) {
+    int result = 0;
+    std::from_chars(&str[pos], &str[pos + 2], result);
+    return result;
 }
 
 int main() {
@@ -117,6 +120,10 @@ int main() {
         std::string tp;
         std::vector<double> row;
         while (std::getline(newfile, tp)) {
+            auto pos = search_for_observation_time(tp);
+            int hour;
+            if (pos != std::string::npos)
+                hour = convert_hours(tp, pos + 16); //plus size of 'Observations at '
             if (is_number_row(tp)) {
                 row = string_to_vector(tp);
                 if (row.size() == 11)
@@ -125,7 +132,7 @@ int main() {
         }
         newfile.close();
     }
-    for (auto& el : sound)
-        el.dump();
+    /*for (auto& el : sound)
+        el.dump();*/
 #endif
 }
