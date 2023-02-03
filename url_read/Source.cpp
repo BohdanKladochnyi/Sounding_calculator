@@ -12,8 +12,9 @@
 
 constexpr int minHeight = 28500;
 int gnss_station_height;
+int observ_hour;
 
-struct PresTempHum {
+struct PresTempHum final {
     double pressure;
     double heigth;
     double temperature;
@@ -22,6 +23,11 @@ struct PresTempHum {
     void dump() const {
         std::cout << pressure << '\t' << heigth << '\t' << temperature << '\t' << hummidity << '\n';
     }
+};
+
+struct Input final {
+    std::wstring filename;
+    std::wstring url;
 };
 
 bool is_number_row(std::string_view str) {
@@ -60,9 +66,9 @@ PresTempHum filter_row(std::vector<double>& row) {
     return obj;
 }
 
-std::wstring url_input() {
+Input get_input() {
+    Input res;
     std::wstring station, year, month, date_from, date_to;
-    std::wstring url_addr;
 
     std::cout << "Enter station number: ";
     std::wcin >> station;
@@ -79,10 +85,12 @@ std::wstring url_input() {
     std::cout << "Enter date to: ";
     std::wcin >> date_to;
 
-    url_addr = L"https://weather.uwyo.edu/cgi-bin/sounding?region=naconf&TYPE=TEXT%3ALIST&YEAR="
+
+    res.filename = station + L"_" + year + month + date_from + L".txt";
+    res.url = L"https://weather.uwyo.edu/cgi-bin/sounding?region=naconf&TYPE=TEXT%3ALIST&YEAR="
         + year + L"&MONTH=" + month + L"&FROM=" + date_from + L"00&TO=" + date_to + L"18&STNM=" + station;
 
-    return url_addr;
+    return res;
 }
 
 std::string::size_type search_for_observation_time(std::string_view str) {
@@ -111,42 +119,56 @@ PresTempHum interpolate(PresTempHum fst, PresTempHum scnd) {
     return res;
 }
 
+double calculate_hydrostatic(const std::vector<PresTempHum>& sounde) {
+    double res = 0.0;
+
+    return res;
+}
+
+double calculate_wet(const std::vector<PresTempHum>& sounde) {
+    double res = 0.0;
+
+    return res;
+}
+
+double calculate_hydrostatic_SA(const std::vector<PresTempHum>& sounde) {
+    double res = 0.0;
+
+    return res;
+}
+
+double calculate_wet_SA(const std::vector<PresTempHum>& sounde) {
+    double res = 0.0;
+
+    return res;
+}
+
 int main() {
-#if 0
+#if 1
+    Input input = get_input();
     // the URL to download from 
-    std::wstring url_addr = url_input();
+    std::wstring url_addr = input.url;
 
     // the destination file 
-    std::wstring destFile = L"myfile.txt";
+    std::wstring destFile = input.filename;
 
     // URLDownloadToFile returns S_OK on success 
     if (S_OK == URLDownloadToFile(NULL, url_addr.c_str(), destFile.c_str(), 0, NULL)) {
-        std::cout << "Saved to 'myfile.txt'\n";
+        std::wcout << L"Saved to '" << input.filename << L"'\n";
     } else {
-        std::cout << "Failed\n";
+        std::cerr << "Cannot connect to URL address\n";
         return -1;
     }
 #endif
-    std::cout << "Enter GNSS station height: ";
-    std::cin >> gnss_station_height;
-    PresTempHum a = { 945.0, 547.0, 12.65, 64.0 };
-    PresTempHum b = { 925.0, 730.0, 11.6, 62.0 };
-    PresTempHum c = interpolate(a, b);
-    c.dump();
 
-#if 0
+#if 1
     std::fstream newfile;
-    /*newfile.open("myfile.txt", std::ios::out);
-    if (newfile.is_open()) {
-        newfile << "Tutorials point \n";
-        newfile.close();
-    }*/
+    std::vector<PresTempHum> sounde;
+    sounde.reserve(24);
 
     std::cout << "Enter GNSS station height: ";
     std::cin >> gnss_station_height;
-
-    std::vector<PresTempHum> sound;
-    sound.reserve(24);
+    
     newfile.open("myfile.txt", std::ios::in);
     if (newfile.is_open()) {
         std::string tp;
@@ -159,12 +181,20 @@ int main() {
             if (is_number_row(tp)) {
                 row = string_to_vector(tp);
                 if (row.size() == 11)
-                    sound.push_back(filter_row(row));
+                    sounde.push_back(filter_row(row));
             }
         }
         newfile.close();
+    } else {
+        std::cerr << "Opening file error\n";
+        return -1;
     }
-    /*for (auto& el : sound)
+    /*for (auto& el : sounde)
         el.dump();*/
 #endif
+    /*newfile.open("myfile.txt", std::ios::out);
+    if (newfile.is_open()) {
+        newfile << "Tutorials point \n";
+        newfile.close();
+    }*/
 }
