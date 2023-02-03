@@ -6,10 +6,12 @@
 #include <string_view>
 #include <vector>
 #include <charconv>
+#include <cmath>
 
 #pragma comment(lib, "Urlmon.lib")
 
 constexpr int minHeight = 28500;
+int gnss_station_height;
 
 struct PresTempHum {
     double pressure;
@@ -17,7 +19,7 @@ struct PresTempHum {
     double temperature;
     double hummidity;
     
-    void dump() {
+    void dump() const {
         std::cout << pressure << '\t' << heigth << '\t' << temperature << '\t' << hummidity << '\n';
     }
 };
@@ -46,6 +48,11 @@ bool check_upper_height(PresTempHum obj) {
     if (obj.heigth < minHeight)
         return false;
     return true;
+    //remember position
+    //read to last row
+    //read row to vector
+    //check height
+    //put back old position
 }
 
 PresTempHum filter_row(std::vector<double>& row) {
@@ -88,6 +95,22 @@ int convert_hours(std::string_view str, std::string::size_type pos) {
     return result;
 }
 
+PresTempHum interpolate(PresTempHum fst, PresTempHum scnd) {
+    const double e = 2.718;
+    const double g = 9.81;
+    const double Rd = 287.0;
+    PresTempHum res;
+    res.heigth = gnss_station_height;
+    res.temperature = (res.heigth - fst.heigth) * (scnd.temperature - fst.temperature) /
+        (scnd.heigth - fst.heigth) + fst.temperature;
+    res.hummidity = (res.heigth - fst.heigth) * (scnd.hummidity - fst.hummidity) /
+        (scnd.heigth - fst.heigth) + fst.hummidity;
+    double Tm = (fst.temperature + res.temperature) / 2 + 273.15;
+    res.pressure = fst.pressure * std::pow(e, -g / (((fst.temperature + res.temperature) /
+        2 + 273.15) * Rd) * (res.heigth - fst.heigth));
+    return res;
+}
+
 int main() {
 #if 0
     // the URL to download from 
@@ -104,14 +127,23 @@ int main() {
         return -1;
     }
 #endif
+    std::cout << "Enter GNSS station height: ";
+    std::cin >> gnss_station_height;
+    PresTempHum a = { 945.0, 547.0, 12.65, 64.0 };
+    PresTempHum b = { 925.0, 730.0, 11.6, 62.0 };
+    PresTempHum c = interpolate(a, b);
+    c.dump();
 
-#if 1
+#if 0
     std::fstream newfile;
     /*newfile.open("myfile.txt", std::ios::out);
     if (newfile.is_open()) {
         newfile << "Tutorials point \n";
         newfile.close();
     }*/
+
+    std::cout << "Enter GNSS station height: ";
+    std::cin >> gnss_station_height;
 
     std::vector<PresTempHum> sound;
     sound.reserve(24);
