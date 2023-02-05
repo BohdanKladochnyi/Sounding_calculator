@@ -11,8 +11,8 @@
 #pragma comment(lib, "Urlmon.lib")
 
 constexpr int minHeight = 28500;
-int gnss_station_height;
-int observ_hour;
+int gnss_station_height = 547.7;
+int observ_hour = 6;
 
 struct PresTempHum final {
     double pressure;
@@ -20,8 +20,21 @@ struct PresTempHum final {
     double temperature;
     double hummidity;
     
+    double e, T_k, N_d, N_w, D_d, D_w, Z_w;
+
     void dump() const {
         std::cout << pressure << '\t' << heigth << '\t' << temperature << '\t' << hummidity << '\n';
+    }
+};
+
+struct Components final {
+    double hydrostatic;
+    double wet;
+    double hydrostatic_SA;
+    double wet_SA;
+
+    void dump() const {
+        std::cout << hydrostatic << '\t' << wet << '\t' << hydrostatic_SA << '\t' << wet_SA << '\n';
     }
 };
 
@@ -32,9 +45,15 @@ struct Input final {
 
 bool is_number_row(std::string_view str) {
     if (str.empty()) return 0;
-    size_t i = 0;
+    size_t sign_counter = 0;
     for (auto& c: str) {
         if (!std::isdigit(c) && !std::isspace(c) && (c != '.') && (c != '-'))
+            return false;
+        if (c == '-')
+            ++sign_counter;
+        else
+            sign_counter = 0;
+        if (sign_counter == 2)
             return false;
     }
     return true;
@@ -85,7 +104,6 @@ Input get_input() {
     std::cout << "Enter date to: ";
     std::wcin >> date_to;
 
-
     res.filename = station + L"_" + year + month + date_from + L".txt";
     res.url = L"https://weather.uwyo.edu/cgi-bin/sounding?region=naconf&TYPE=TEXT%3ALIST&YEAR="
         + year + L"&MONTH=" + month + L"&FROM=" + date_from + L"00&TO=" + date_to + L"18&STNM=" + station;
@@ -117,6 +135,17 @@ PresTempHum interpolate(PresTempHum fst, PresTempHum scnd) {
     res.pressure = fst.pressure * std::pow(e, -g / (((fst.temperature + res.temperature) /
         2 + 273.15) * Rd) * (res.heigth - fst.heigth));
     return res;
+}
+
+void insert_interpolating(std::vector<PresTempHum>& sounde) {
+    size_t i = 0;
+    if (sounde[0].heigth > gnss_station_height) {
+        std::cerr << "Interpolation error\n";
+        return;
+    }
+    while (sounde[i].heigth < gnss_station_height)
+        ++i;
+    sounde[i - 1] = interpolate(sounde[i - 1], sounde[i - 2]);
 }
 
 void supplement_sounding(std::vector<PresTempHum>& sounde) {
@@ -151,33 +180,15 @@ void supplement_sounding(std::vector<PresTempHum>& sounde) {
     size_t i = 0;
     while (SMA[i].pressure > sounde.back().pressure)
         ++i;
-    while (i < 24) {
+    while (i < 25) {
         sounde.push_back(SMA[i]);
         ++i;
     }
 
 }
 
-double calculate_hydrostatic(const std::vector<PresTempHum>& sounde) {
-    double res = 0.0;
-
-    return res;
-}
-
-double calculate_wet(const std::vector<PresTempHum>& sounde) {
-    double res = 0.0;
-
-    return res;
-}
-
-double calculate_hydrostatic_SA(const std::vector<PresTempHum>& sounde) {
-    double res = 0.0;
-
-    return res;
-}
-
-double calculate_wet_SA(const std::vector<PresTempHum>& sounde) {
-    double res = 0.0;
+Components calculate_components(const std::vector<PresTempHum>& sounde) {
+    Components res = {};
 
     return res;
 }
@@ -203,40 +214,66 @@ int main() {
 #if 1
     std::fstream newfile;
 
-    std::cout << "Enter GNSS station height: ";
+    /*std::cout << "Enter GNSS station height: ";
     std::cin >> gnss_station_height;
-    
-    std::vector<PresTempHum> sounde;
-    sounde.reserve(24);
+    */
+    std::vector<Components> calculated_components;
+    calculated_components.reserve(10);
 
-    newfile.open("myfile.txt", std::ios::in);
+    newfile.open("myfile.txt", std::ios::in); //!!!!!!!!!!!!!!!!!!!!!!!!!!!CHANGE FILE NAME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     if (newfile.is_open()) {
         std::string tp;
-        std::vector<double> row;
-        row.reserve(11);
-
-        
+        std::vector<PresTempHum> sounde;
+        sounde.reserve(24);
+        int current_day = -1;
 
         while (std::getline(newfile, tp)) {
             auto pos = search_for_observation_time(tp);
             int hour = -1;
 
-            if (pos != std::string::npos)
-                hour = convert_hours(tp, pos + 16); //plus size of 'Observations at '
+            while (hour != observ_hour) {
+                std::getline(newfile, tp);
+                if (newfile.eof())
+                    break;
+                pos = search_for_observation_time(tp);
+
+                if (pos != std::string::npos) {
+                    hour = convert_hours(tp, pos + 16); //plus size of 'Observations at '
+                    current_day = convert_hours(tp, pos + 20); //yes, works also with days
+                }
+            }
             
-            if (is_number_row(tp)) {
-                row = string_to_vector(tp);
+            if (newfile.eof())
+                break;
+
+            while (!is_number_row(tp))
+                std::getline(newfile, tp);
+
+            while (is_number_row(tp)) {
+                std::vector<double> row = string_to_vector(tp);
                 if (row.size() == 11)
                     sounde.push_back(filter_row(row));
+                std::getline(newfile, tp);
             }
+
+            if (!check_upper_height(sounde.back())) {
+                std::cout << "Upper sounding height is lower then " << minHeight 
+                    << " at day " << current_day << '\n';
+                continue;
+            }
+
+            supplement_sounding(sounde);
+            insert_interpolating(sounde);
+
+            for (auto& el : sounde)
+                el.dump();
         }
         newfile.close();
     } else {
         std::cerr << "Opening file error\n";
         return -1;
     }
-    supplement_sounding(sounde);
-    for (auto& el : sounde)
+    for (auto& el : calculated_components)
         el.dump();
 #endif
     /*newfile.open("myfile.txt", std::ios::out);
