@@ -62,7 +62,7 @@ bool check_upper_height(PresTempHum obj) {
 }
 
 PresTempHum filter_row(std::vector<double>& row) {
-    PresTempHum obj = { row[1], row[2], row[3], row[5]};
+    PresTempHum obj = { row[0], row[1], row[2], row[4]};
     return obj;
 }
 
@@ -119,6 +119,45 @@ PresTempHum interpolate(PresTempHum fst, PresTempHum scnd) {
     return res;
 }
 
+void supplement_sounding(std::vector<PresTempHum>& sounde) {
+    static PresTempHum SMA[25] = {
+        { 11.970, 30000.0, -46.641, 0.0 },
+        { 10.313, 31000.0, -45.650, 0.0 },
+        { 8.891, 32000.0, -44.660, 0.0 },
+        { 7.673, 33000.0, -42.177, 0.0 },
+        { 6.634, 34000.0, -39.406, 0.0 },
+        { 5.746, 35000.0, -36.637, 0.0 },
+        { 4.985, 36000.0, -33.868, 0.0 },
+        { 4.332, 37000.0, -31.100, 0.0 },
+        { 3.771, 38000.0, -28.332, 0.0 },
+        { 3.288, 39000.0, -25.566, 0.0 },
+        { 2.871, 40000.0, -22.800, 0.0 },
+        { 2.511, 41000.0, -20.036, 0.0 },
+        { 2.200, 42000.0, -17.272, 0.0 },
+        { 1.929, 43000.0, -14.509, 0.0 },
+        { 1.695, 44000.0, -11.747, 0.0 },
+        { 1.491, 45000.0, -8.986, 0.0 },
+        { 1.313, 46000.0, -6.225, 0.0 },
+        { 1.158, 47000.0, -3.466, 0.0 },
+        { 1.023, 48000.0, -2.500, 0.0 },
+        { 0.903, 49000.0, -2.500, 0.0 },
+        { 0.798, 50000.0, -2.500, 0.0 },
+        { 0.425, 55000.0, -12.379, 0.0 },
+        { 0.220, 60000.0, -26.129, 0.0 },
+        { 0.109, 65000.0, -39.858, 0.0 },
+        { 0.052, 70000.0, -53.565, 0.0 }
+    };
+
+    size_t i = 0;
+    while (SMA[i].pressure > sounde.back().pressure)
+        ++i;
+    while (i < 24) {
+        sounde.push_back(SMA[i]);
+        ++i;
+    }
+
+}
+
 double calculate_hydrostatic(const std::vector<PresTempHum>& sounde) {
     double res = 0.0;
 
@@ -144,7 +183,7 @@ double calculate_wet_SA(const std::vector<PresTempHum>& sounde) {
 }
 
 int main() {
-#if 1
+#if 0
     Input input = get_input();
     // the URL to download from 
     std::wstring url_addr = input.url;
@@ -154,7 +193,7 @@ int main() {
 
     // URLDownloadToFile returns S_OK on success 
     if (S_OK == URLDownloadToFile(NULL, url_addr.c_str(), destFile.c_str(), 0, NULL)) {
-        std::wcout << L"Saved to '" << input.filename << L"'\n";
+        std::wcout << L"Sounding data saved to '" << input.filename << L"'\n";
     } else {
         std::cerr << "Cannot connect to URL address\n";
         return -1;
@@ -163,21 +202,28 @@ int main() {
 
 #if 1
     std::fstream newfile;
-    std::vector<PresTempHum> sounde;
-    sounde.reserve(24);
 
     std::cout << "Enter GNSS station height: ";
     std::cin >> gnss_station_height;
     
+    std::vector<PresTempHum> sounde;
+    sounde.reserve(24);
+
     newfile.open("myfile.txt", std::ios::in);
     if (newfile.is_open()) {
         std::string tp;
         std::vector<double> row;
+        row.reserve(11);
+
+        
+
         while (std::getline(newfile, tp)) {
             auto pos = search_for_observation_time(tp);
-            int hour;
+            int hour = -1;
+
             if (pos != std::string::npos)
                 hour = convert_hours(tp, pos + 16); //plus size of 'Observations at '
+            
             if (is_number_row(tp)) {
                 row = string_to_vector(tp);
                 if (row.size() == 11)
@@ -189,8 +235,9 @@ int main() {
         std::cerr << "Opening file error\n";
         return -1;
     }
-    /*for (auto& el : sounde)
-        el.dump();*/
+    supplement_sounding(sounde);
+    for (auto& el : sounde)
+        el.dump();
 #endif
     /*newfile.open("myfile.txt", std::ios::out);
     if (newfile.is_open()) {
