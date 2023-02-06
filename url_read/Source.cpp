@@ -43,13 +43,16 @@ struct Components final {
     double hydrostatic_SA;
     double wet_SA;
 
+    int hour, day;
+
     void dump(std::ostream& os) const {
         os << hydrostatic << '\t' << wet << '\t' << hydrostatic_SA << '\t' << wet_SA << '\n';
     }
 };
 
 struct Input final {
-    std::wstring filename;
+    std::wstring in_filename;
+    std::wstring out_filename;
     std::wstring url;
 };
 
@@ -114,7 +117,9 @@ Input get_input() {
     std::cout << "Enter date to: ";
     std::wcin >> date_to;
 
-    res.filename = station + L"_" + year + month + date_from + L".txt";
+    res.in_filename = station + L"_" + year + month + date_from + L"_" + date_to + L"_sounding.txt";
+    res.out_filename = station + L"_" + year + month + date_from + L"_" + date_to + L"_calculation.txt";
+
     res.url = L"https://weather.uwyo.edu/cgi-bin/sounding?region=naconf&TYPE=TEXT%3ALIST&YEAR="
         + year + L"&MONTH=" + month + L"&FROM=" + date_from + L"00&TO=" + date_to + L"18&STNM=" + station;
 
@@ -250,17 +255,17 @@ Components calculate_components(std::vector<PresTempHum>& sounde) {
 }
 
 int main() {
-#if 0
     Input input = get_input();
+#if 1
     // the URL to download from 
     std::wstring url_addr = input.url;
 
     // the destination file 
-    std::wstring destFile = input.filename;
+    std::wstring destFile = input.in_filename;
 
     // URLDownloadToFile returns S_OK on success 
     if (S_OK == URLDownloadToFile(NULL, url_addr.c_str(), destFile.c_str(), 0, NULL)) {
-        std::wcout << L"Sounding data saved to '" << input.filename << L"'\n";
+        std::wcout << L"Sounding data saved to '" << input.in_filename << L"'\n";
     } else {
         std::cerr << "Cannot connect to URL address\n";
         return -1;
@@ -276,14 +281,14 @@ int main() {
     std::vector<Components> calculated_components;
     calculated_components.reserve(10);
 
-    std::vector<PresTempHum> sounde;
-    sounde.reserve(24);
 
-    fin.open("myfile.txt", std::ios::in); //!!!!!!!!!!!!!!!!!!!!!!!!!!!CHANGE FILE NAME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    fin.open(input.in_filename, std::ios::in);
     if (fin.is_open()) {
         std::string tp;
         
         int current_day = -1;
+        std::vector<PresTempHum> sounde;
+        sounde.reserve(128);
 
         while (std::getline(fin, tp)) {
             auto pos = search_for_observation_time(tp);
@@ -324,23 +329,32 @@ int main() {
             insert_interpolating(sounde);
 
             calculated_components.push_back(calculate_components(sounde));
+            calculated_components.back().hour = observ_hour;
+            calculated_components.back().day = current_day;
 
+            sounde.clear();
         }
         fin.close();
     } else {
         std::cerr << "Opening file error\n";
         return -1;
     }
-    //for (auto& el : calculated_components)
-    //    el.dump();
 #endif
 
     std::fstream fout;
-    fout.open("calculation.txt", std::ios::out);
+    fout.open(input.out_filename, std::ios::out);
     if (fout.is_open()) {
-        for (auto& el : sounde)
-            el.dump_all(fout);
-        calculated_components.back().dump(fout);
-        fout.close();
+        fout << "d_h aer\td_w aer\td_h SA\td_w SA\n";
+        for (auto& el : calculated_components) {
+            fout << el.hydrostatic << "\t" << el.hydrostatic_SA << "\t"
+                << el.wet << "\t" << el.wet_SA << "\n";
+        }
+        std::wcout << L"Calculation saved to '" << input.out_filename << L"'\n";
+    } else {
+        std::cerr << "Creating file error\n";
+        return -1;
     }
+
+
+    return 0;
 }
