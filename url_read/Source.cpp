@@ -14,8 +14,8 @@
 
 constexpr int minHeight = 28500;
 double gnss_station_height = 547.69;
-double gnss_station_phi = 49.9;
-int observ_hour = 6;
+double gnss_station_phi = 49.9; //lattitude
+int observ_hour = 12;
 
 struct PresTempHum final {
     double P;
@@ -30,7 +30,7 @@ struct PresTempHum final {
     }
 
     void dump_all(std::ostream& os) const {
-        //os << std::setprecision(1) << std::fixed;
+        os << std::setprecision(2) << std::fixed;
         os << P << '\t' << H << '\t' << T << '\t' << U << '\t'
             << e << '\t' << T_k << '\t' << N_d << '\t' << N_w << '\t'
             << D_d << '\t' << D_w << '\t' << Z_w << '\n';
@@ -197,6 +197,7 @@ void supplement_sounding(std::vector<PresTempHum>& sounde) {
     size_t i = 0;
     while (SMA[i].P > sounde.back().P)
         ++i;
+    ++i;
     while (i < 25) {
         sounde.push_back(SMA[i]);
         ++i;
@@ -283,6 +284,7 @@ int main() {
 
 
     fin.open(input.in_filename, std::ios::in);
+    
     if (fin.is_open()) {
         std::string tp;
         
@@ -335,6 +337,7 @@ int main() {
             sounde.clear();
         }
         fin.close();
+
     } else {
         std::cerr << "Opening file error\n";
         return -1;
@@ -344,12 +347,14 @@ int main() {
     std::fstream fout;
     fout.open(input.out_filename, std::ios::out);
     if (fout.is_open()) {
-        fout << "d_h aer\td_w aer\td_h SA\td_w SA\n";
+        fout << "d_h aer    d_w aer    d_h SA    d_w SA\n";
         for (auto& el : calculated_components) {
-            fout << el.hydrostatic << "\t" << el.hydrostatic_SA << "\t"
-                << el.wet << "\t" << el.wet_SA << "\n";
+            fout << std::setprecision(2) << std::fixed;
+            fout << el.hydrostatic << "    " << el.hydrostatic_SA << "    "
+                << el.wet << "    " << el.wet_SA << "\n";
         }
         std::wcout << L"Calculation saved to '" << input.out_filename << L"'\n";
+        fout.close();
     } else {
         std::cerr << "Creating file error\n";
         return -1;
