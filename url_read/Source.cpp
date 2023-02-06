@@ -13,9 +13,9 @@
 #pragma comment(lib, "Urlmon.lib")
 
 constexpr int minHeight = 28500;
-double gnss_station_height = 547.69;
-double gnss_station_phi = 49.9; //lattitude
-int observ_hour = 12;
+double gnss_station_height;
+double gnss_station_phi; //lattitude
+int observ_hour;
 
 struct PresTempHum final {
     double P;
@@ -108,13 +108,13 @@ Input get_input() {
     std::cout << "Enter a year: ";
     std::wcin >> year;
 
-    std::cout << "Enter a month: ";
+    std::cout << "Enter a month (01, 02 ... 12): ";
     std::wcin >> month;
 
-    std::cout << "Enter date from: ";
+    std::cout << "Enter start date (01, 02, ... 31): ";
     std::wcin >> date_from;
 
-    std::cout << "Enter date to: ";
+    std::cout << "Enter final date (01, 02, ... 31: ";
     std::wcin >> date_to;
 
     res.in_filename = station + L"_" + year + month + date_from + L"_" + date_to + L"_sounding.txt";
@@ -126,15 +126,33 @@ Input get_input() {
     return res;
 }
 
-std::string::size_type search_for_observation_time(std::string_view str) {
-    return str.find("Observations at ");
-}
-
 int convert_hours(std::string_view str, std::string::size_type pos) {
     int result = 0;
     std::from_chars(&str[pos], &str[pos + 2], result);
     return result;
 }
+
+void input_station_parameters() {
+    std::string hour;
+
+    std::cout << "Enter observation hour (00, 06, 12, 18): ";
+    std::cin >> hour;
+    hour.append(" "); //dummy fix for next function call
+    observ_hour = convert_hours(hour, 0);
+
+    std::cout << "Enter GNSS station height (meters): ";
+    std::cin >> gnss_station_height;
+
+    std::cout << "Enter GNSS station lattitude (decimal degrees): ";
+    std::cin >> gnss_station_phi;
+
+}
+
+std::string::size_type search_for_observation_time(std::string_view str) {
+    return str.find("Observations at ");
+}
+
+
 
 PresTempHum interpolate(PresTempHum fst, PresTempHum scnd) {
     const double e = 2.718;
@@ -257,6 +275,8 @@ Components calculate_components(std::vector<PresTempHum>& sounde) {
 
 int main() {
     Input input = get_input();
+    input_station_parameters();
+
 #if 1
     // the URL to download from 
     std::wstring url_addr = input.url;
@@ -266,6 +286,7 @@ int main() {
 
     // URLDownloadToFile returns S_OK on success 
     if (S_OK == URLDownloadToFile(NULL, url_addr.c_str(), destFile.c_str(), 0, NULL)) {
+        std::wcout << L"--------------------------------------------------------\n";
         std::wcout << L"Sounding data saved to '" << input.in_filename << L"'\n";
     } else {
         std::cerr << "Cannot connect to URL address\n";
@@ -276,9 +297,6 @@ int main() {
 #if 1
     std::fstream fin;
 
-    /*std::cout << "Enter GNSS station height: ";
-    std::cin >> gnss_station_height;
-    */
     std::vector<Components> calculated_components;
     calculated_components.reserve(10);
 
@@ -354,6 +372,7 @@ int main() {
                 << el.wet << "    " << el.wet_SA << "\n";
         }
         std::wcout << L"Calculation saved to '" << input.out_filename << L"'\n";
+        std::wcout << L"--------------------------------------------------------\n";
         fout.close();
     } else {
         std::cerr << "Creating file error\n";
