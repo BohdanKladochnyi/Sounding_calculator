@@ -8,22 +8,32 @@
 #include <charconv>
 #include <cmath>
 
+#include <iomanip>
+
 #pragma comment(lib, "Urlmon.lib")
 
 constexpr int minHeight = 28500;
-int gnss_station_height = 547.7;
+double gnss_station_height = 547.69;
+double gnss_station_phi = 49.9;
 int observ_hour = 6;
 
 struct PresTempHum final {
-    double pressure;
-    double heigth;
-    double temperature;
-    double hummidity;
+    double P;
+    double H;
+    double T;
+    double U;
     
     double e, T_k, N_d, N_w, D_d, D_w, Z_w;
 
-    void dump() const {
-        std::cout << pressure << '\t' << heigth << '\t' << temperature << '\t' << hummidity << '\n';
+    void dump(std::ostream& os) const {
+        os << P << '\t' << H << '\t' << T << '\t' << U << '\n';
+    }
+
+    void dump_all(std::ostream& os) const {
+        //os << std::setprecision(1) << std::fixed;
+        os << P << '\t' << H << '\t' << T << '\t' << U << '\t'
+            << e << '\t' << T_k << '\t' << N_d << '\t' << N_w << '\t'
+            << D_d << '\t' << D_w << '\t' << Z_w << '\n';
     }
 };
 
@@ -33,8 +43,8 @@ struct Components final {
     double hydrostatic_SA;
     double wet_SA;
 
-    void dump() const {
-        std::cout << hydrostatic << '\t' << wet << '\t' << hydrostatic_SA << '\t' << wet_SA << '\n';
+    void dump(std::ostream& os) const {
+        os << hydrostatic << '\t' << wet << '\t' << hydrostatic_SA << '\t' << wet_SA << '\n';
     }
 };
 
@@ -70,7 +80,7 @@ std::vector<double> string_to_vector(const std::string& str) {
 }
 
 bool check_upper_height(PresTempHum obj) {
-    if (obj.heigth < minHeight)
+    if (obj.H < minHeight)
         return false;
     return true;
     //remember position
@@ -125,27 +135,29 @@ PresTempHum interpolate(PresTempHum fst, PresTempHum scnd) {
     const double e = 2.718;
     const double g = 9.81;
     const double Rd = 287.0;
+
     PresTempHum res;
-    res.heigth = gnss_station_height;
-    res.temperature = (res.heigth - fst.heigth) * (scnd.temperature - fst.temperature) /
-        (scnd.heigth - fst.heigth) + fst.temperature;
-    res.hummidity = (res.heigth - fst.heigth) * (scnd.hummidity - fst.hummidity) /
-        (scnd.heigth - fst.heigth) + fst.hummidity;
-    double Tm = (fst.temperature + res.temperature) / 2 + 273.15;
-    res.pressure = fst.pressure * std::pow(e, -g / (((fst.temperature + res.temperature) /
-        2 + 273.15) * Rd) * (res.heigth - fst.heigth));
+    res.H = gnss_station_height;
+    res.T = (res.H - fst.H) * (scnd.T - fst.T) /
+        (scnd.H - fst.H) + fst.T;
+    res.U = (res.H - fst.H) * (scnd.U - fst.U) /
+        (scnd.H - fst.H) + fst.U;
+    double Tm = (fst.T + res.T) / 2 + 273.15;
+    res.P = fst.P * std::pow(e, -g / (Tm * Rd) * (res.H - fst.H));
+
     return res;
 }
 
 void insert_interpolating(std::vector<PresTempHum>& sounde) {
     size_t i = 0;
-    if (sounde[0].heigth > gnss_station_height) {
+    if (sounde[0].H > gnss_station_height) {
         std::cerr << "Interpolation error\n";
         return;
     }
-    while (sounde[i].heigth < gnss_station_height)
+    while (sounde[i].H < gnss_station_height)
         ++i;
-    sounde[i - 1] = interpolate(sounde[i - 1], sounde[i - 2]);
+
+    sounde[i - 1] = interpolate(sounde[i - 1], sounde[i]);
 }
 
 void supplement_sounding(std::vector<PresTempHum>& sounde) {
@@ -178,7 +190,7 @@ void supplement_sounding(std::vector<PresTempHum>& sounde) {
     };
 
     size_t i = 0;
-    while (SMA[i].pressure > sounde.back().pressure)
+    while (SMA[i].P > sounde.back().P)
         ++i;
     while (i < 25) {
         sounde.push_back(SMA[i]);
@@ -187,8 +199,52 @@ void supplement_sounding(std::vector<PresTempHum>& sounde) {
 
 }
 
-Components calculate_components(const std::vector<PresTempHum>& sounde) {
-    Components res = {};
+Components calculate_components(std::vector<PresTempHum>& sounde) {
+    Components res = { 0, 0, 0, 0 };
+    size_t i;
+
+    for (i = 0; i != sounde.size(); ++i) {
+        sounde[i].e = sounde[i].U / 100.0 * 6.11 * std::pow(10.0,
+            ((8.62 * sounde[i].T) / (273.15 + sounde[i].T)));
+        
+        sounde[i].T_k = sounde[i].T + 273.15;
+
+        sounde[i].N_d = 77.624 * sounde[i].P / sounde[i].T_k *
+            (1 - 0.378 * sounde[i].e / sounde[i].P);
+        
+        sounde[i].Z_w = 1 + 1650.0 * (sounde[i].e / std::pow(sounde[i].T_k, 3)) *
+            (1.0 - 0.01317 * sounde[i].T + 1.75 * std::pow(10.0, -4) *
+            std::pow(sounde[i].T, 2) + 1.44 * std::pow(10.0, -6) *
+            std::pow(sounde[i].T, 3));
+
+        sounde[i].N_w = ((64.7 - 77.624 * 0.622) * sounde[i].e / sounde[i].T_k +
+            371900.0 * sounde[i].e / std::pow(sounde[i].T_k, 2)) * sounde[i].Z_w;
+    }
+
+    for (i = 0; i != sounde.size() - 1; ++i) {
+        sounde[i].D_d = (sounde[i].N_d + sounde[i + 1].N_d) / 2.0 *
+            (sounde[i + 1].H - sounde[i].H) / 1000.0;
+
+        sounde[i].D_w = (sounde[i].N_w + sounde[i + 1].N_w) / 2.0 *
+            (sounde[i + 1].H - sounde[i].H) / 1000.0;
+    }
+
+    auto float_comp = [](double a, double b, double epsilon = 0.01) { return std::fabs(a - b) <= epsilon; };
+    i = 0;
+    while (!float_comp(sounde[i].H, gnss_station_height))
+        ++i;
+
+    double phi = gnss_station_phi * 3.14159 / 180.0;
+
+    res.hydrostatic_SA = 0.002277 * sounde[i].P / (1 - 0.0026 * std::cos(2.0 * phi) -
+        28.0 * std::pow(10.0, -8) * gnss_station_height) * 1000.0;
+
+    res.wet_SA = (0.002277 * (1255.0 / sounde[i].T_k + 0.05) * sounde[i].e) * 1000.0;
+
+    for ( ; i != sounde.size(); ++i) {
+        res.hydrostatic += sounde[i].D_d;
+        res.wet += sounde[i].D_w;
+    }
 
     return res;
 }
@@ -212,7 +268,7 @@ int main() {
 #endif
 
 #if 1
-    std::fstream newfile;
+    std::fstream fin;
 
     /*std::cout << "Enter GNSS station height: ";
     std::cin >> gnss_station_height;
@@ -220,20 +276,22 @@ int main() {
     std::vector<Components> calculated_components;
     calculated_components.reserve(10);
 
-    newfile.open("myfile.txt", std::ios::in); //!!!!!!!!!!!!!!!!!!!!!!!!!!!CHANGE FILE NAME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    if (newfile.is_open()) {
+    std::vector<PresTempHum> sounde;
+    sounde.reserve(24);
+
+    fin.open("myfile.txt", std::ios::in); //!!!!!!!!!!!!!!!!!!!!!!!!!!!CHANGE FILE NAME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if (fin.is_open()) {
         std::string tp;
-        std::vector<PresTempHum> sounde;
-        sounde.reserve(24);
+        
         int current_day = -1;
 
-        while (std::getline(newfile, tp)) {
+        while (std::getline(fin, tp)) {
             auto pos = search_for_observation_time(tp);
             int hour = -1;
 
             while (hour != observ_hour) {
-                std::getline(newfile, tp);
-                if (newfile.eof())
+                std::getline(fin, tp);
+                if (fin.eof())
                     break;
                 pos = search_for_observation_time(tp);
 
@@ -243,17 +301,17 @@ int main() {
                 }
             }
             
-            if (newfile.eof())
+            if (fin.eof())
                 break;
 
             while (!is_number_row(tp))
-                std::getline(newfile, tp);
+                std::getline(fin, tp);
 
             while (is_number_row(tp)) {
                 std::vector<double> row = string_to_vector(tp);
                 if (row.size() == 11)
                     sounde.push_back(filter_row(row));
-                std::getline(newfile, tp);
+                std::getline(fin, tp);
             }
 
             if (!check_upper_height(sounde.back())) {
@@ -265,20 +323,24 @@ int main() {
             supplement_sounding(sounde);
             insert_interpolating(sounde);
 
-            for (auto& el : sounde)
-                el.dump();
+            calculated_components.push_back(calculate_components(sounde));
+
         }
-        newfile.close();
+        fin.close();
     } else {
         std::cerr << "Opening file error\n";
         return -1;
     }
-    for (auto& el : calculated_components)
-        el.dump();
+    //for (auto& el : calculated_components)
+    //    el.dump();
 #endif
-    /*newfile.open("myfile.txt", std::ios::out);
-    if (newfile.is_open()) {
-        newfile << "Tutorials point \n";
-        newfile.close();
-    }*/
+
+    std::fstream fout;
+    fout.open("calculation.txt", std::ios::out);
+    if (fout.is_open()) {
+        for (auto& el : sounde)
+            el.dump_all(fout);
+        calculated_components.back().dump(fout);
+        fout.close();
+    }
 }
