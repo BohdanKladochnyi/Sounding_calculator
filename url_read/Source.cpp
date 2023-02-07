@@ -232,8 +232,6 @@ std::string::size_type search_for_observation_time(std::string_view str) {
     return str.find("Observations at ");
 }
 
-
-
 PresTempHum interpolate(PresTempHum fst, PresTempHum scnd) {
     const double e = 2.718;
     const double g = 9.81;
@@ -253,10 +251,14 @@ PresTempHum interpolate(PresTempHum fst, PresTempHum scnd) {
 
 void insert_interpolating(std::vector<PresTempHum>& sounde) {
     size_t i = 0;
+    PresTempHum res;
+
     if (sounde[0].H > gnss_station_height) {
-        std::cerr << "Interpolation error\n";
+        res = interpolate(sounde[0], sounde[1]);
+        sounde.insert(sounde.begin(), res);
         return;
     }
+
     while (sounde[i].H < gnss_station_height)
         ++i;
 
