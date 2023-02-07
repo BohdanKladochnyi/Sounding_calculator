@@ -5,9 +5,9 @@
 #include <string>
 #include <string_view>
 #include <vector>
-#include <charconv>
 #include <cmath>
 
+#include <charconv>
 #include <iomanip>
 
 #pragma comment(lib, "Urlmon.lib")
@@ -98,24 +98,51 @@ PresTempHum filter_row(std::vector<double>& row) {
     return obj;
 }
 
+std::wstring get_digits(size_t count) {
+    std::wstring res;
+    while (true) {
+        std::wcin >> res;
+        std::wcin.ignore(32767, '\n');
+
+        if (res.size() != count) {
+            std::cout << "Invaid input. Please, try again: ";
+            continue;
+        }
+
+        bool err = false;
+        for (size_t i = 0; i < count; i++) {
+            if (!std::isdigit(res[i])) {
+                err = true;
+                break;
+            }
+        }
+        if (err) {
+            std::cout << "Invaid input. Please, try again: ";
+            continue;
+        }
+
+        return res;
+    }
+}
+
 Input get_input() {
     Input res;
     std::wstring station, year, month, date_from, date_to;
 
     std::cout << "Enter station number: ";
-    std::wcin >> station;
+    station = get_digits(5);
 
     std::cout << "Enter a year: ";
-    std::wcin >> year;
+    year = get_digits(4);
 
     std::cout << "Enter a month (01, 02 ... 12): ";
-    std::wcin >> month;
+    month = get_digits(2);
 
     std::cout << "Enter start date (01, 02, ... 31): ";
-    std::wcin >> date_from;
+    date_from = get_digits(2);
 
     std::cout << "Enter final date (01, 02, ... 31: ";
-    std::wcin >> date_to;
+    date_to = get_digits(2);
 
     res.in_filename = station + L"_" + year + month + date_from + L"_" + date_to + L"_sounding.txt";
     res.out_filename = station + L"_" + year + month + date_from + L"_" + date_to + L"_calculation.txt";
