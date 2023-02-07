@@ -159,19 +159,72 @@ int convert_hours(std::string_view str, std::string::size_type pos) {
     return result;
 }
 
-void input_station_parameters() {
-    std::string hour;
+int hours_input() {
+    std::string res;
+    int hour;
+    while (true) {
+        std::cin >> res;
+        std::cin.ignore(32767, '\n');
 
+        if (res.size() != 2) {
+            std::cout << "Invaid input. Please, try again: ";
+            continue;
+        }
+
+        bool err = false;
+        for (size_t i = 0; i < 2; i++) {
+            if (!std::isdigit(res[i])) {
+                err = true;
+                break;
+            }
+        }
+        if (err) {
+            std::cout << "Invaid input. Please, try again: ";
+            continue;
+        }
+
+        res.append(" "); //dummy fix for next function call
+        hour = convert_hours(res, 0);
+
+        if ((hour != 0) && (hour != 6) && (hour != 12) && (hour != 18)) {
+            std::cout << "Invaid input. Please, try again: ";
+            continue;
+        }
+
+        return hour;
+    }
+}
+
+double numbers_input() {
+    double res;
+
+    while (true) {
+        std::cin >> res;
+
+        if (std::cin.fail()) {
+            std::cin.clear();
+            std::cin.ignore(32767, '\n');
+
+            std::cout << "Invaid input. Please, try again: ";
+            continue;
+        } else {
+            std::cin.ignore(32767, '\n');
+            
+            return res;
+        }
+    }
+    
+}
+
+void input_station_parameters() {
     std::cout << "Enter observation hour (00, 06, 12, 18): ";
-    std::cin >> hour;
-    hour.append(" "); //dummy fix for next function call
-    observ_hour = convert_hours(hour, 0);
+    observ_hour = hours_input();
 
     std::cout << "Enter GNSS station height (meters): ";
-    std::cin >> gnss_station_height;
+    gnss_station_height = numbers_input();
 
     std::cout << "Enter GNSS station lattitude (decimal degrees): ";
-    std::cin >> gnss_station_phi;
+    gnss_station_phi = numbers_input();
 
 }
 
@@ -316,7 +369,7 @@ int main() {
         std::wcout << L"--------------------------------------------------------\n";
         std::wcout << L"Sounding data saved to '" << input.in_filename << L"'\n";
     } else {
-        std::cerr << "Cannot connect to URL address\n";
+        std::cerr << "Cannot connect to URL address or invalid date or station number\n";
         return -1;
     }
 #endif
