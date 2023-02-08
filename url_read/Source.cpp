@@ -440,6 +440,7 @@ int main() {
             if (!check_upper_height(sounde.back())) {
                 std::wcout << L"Upper sounding height is lower then " << minHeight 
                     << L" at day " << current_day << '\n';
+                sounde.clear();
                 continue;
             }
 
