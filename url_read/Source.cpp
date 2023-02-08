@@ -50,7 +50,7 @@ struct Components final {
 
     void dump(std::ostream& os) const {
         os << std::setprecision(2) << std::fixed;
-        os << hydrostatic << "    " << wet << "    "
+        os << day << "    " << hydrostatic << "    " << wet << "    "
             << hydrostatic_SA << "    " << wet_SA << "\n";
     }
 };
@@ -475,7 +475,7 @@ int main() {
     std::fstream res_out;
     res_out.open(input.out_filename, std::ios::out);
     if (res_out.is_open()) {
-        res_out << "d_h aer    d_w aer    d_h SA    d_w SA\n";
+        res_out << "day    d_h aer    d_w aer    d_h SA    d_w SA\n";
         for (auto& el : calculated_components) {
             el.dump(res_out);
         }
