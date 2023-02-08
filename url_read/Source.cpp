@@ -26,14 +26,17 @@ struct PresTempHum final {
     double e, T_k, N_d, N_w, D_d, D_w, Z_w;
 
     void dump(std::ostream& os) const {
-        os << P << '\t' << H << '\t' << T << '\t' << U << '\n';
+        os << std::setprecision(3) << std::fixed;
+        os << P << "    " << H << "    " << T << "    " << U << "    ";
     }
 
     void dump_all(std::ostream& os) const {
-        os << std::setprecision(2) << std::fixed;
-        os << P << '\t' << H << '\t' << T << '\t' << U << '\t'
-            << e << '\t' << T_k << '\t' << N_d << '\t' << N_w << '\t'
-            << D_d << '\t' << D_w << '\t' << Z_w << '\n';
+        os << std::setprecision(3) << std::fixed;
+        os << P << "  " << H << "  " << T << "  " << U << "  "
+            << e << "  " << T_k << "  " << N_d << "  " << N_w << "  "
+            << D_d << "  " << D_w << "  ";
+        os << std::setprecision(6) << std::fixed;
+        os << Z_w << "\n";
     }
 };
 
@@ -46,12 +49,15 @@ struct Components final {
     int hour, day;
 
     void dump(std::ostream& os) const {
-        os << hydrostatic << '\t' << wet << '\t' << hydrostatic_SA << '\t' << wet_SA << '\n';
+        os << std::setprecision(2) << std::fixed;
+        os << hydrostatic << "    " << hydrostatic_SA << "    "
+            << wet << "    " << wet_SA << "\n";
     }
 };
 
 struct Input final {
     std::wstring in_filename;
+    std::wstring calculation_filename;
     std::wstring out_filename;
     std::wstring url;
 };
@@ -145,7 +151,9 @@ Input get_input() {
     date_to = get_digits(2);
 
     res.in_filename = station + L"_" + year + month + date_from + L"_" + date_to + L"_sounding.txt";
-    res.out_filename = station + L"_" + year + month + date_from + L"_" + date_to + L"_calculation.txt";
+    res.out_filename = station + L"_" + year + month + date_from + L"_" + date_to + L"_result.txt";
+
+    res.calculation_filename = station + L"_" + year + month + date_from + L"_" + date_to + L"_calculation.txt";
 
     res.url = L"https://weather.uwyo.edu/cgi-bin/sounding?region=naconf&TYPE=TEXT%3ALIST&YEAR="
         + year + L"&MONTH=" + month + L"&FROM=" + date_from + L"00&TO=" + date_to + L"18&STNM=" + station;
@@ -392,6 +400,14 @@ int main() {
         std::vector<PresTempHum> sounde;
         sounde.reserve(128);
 
+        std::fstream calc_out;
+        calc_out.open(input.calculation_filename, std::ios::out);
+        if (!calc_out.is_open()) {
+            std::cerr << "Creating file error\n";
+            fin.close();
+            return -1;
+        }
+
         while (std::getline(fin, tp)) {
             auto pos = search_for_observation_time(tp);
             int hour = -1;
@@ -422,8 +438,8 @@ int main() {
             }
 
             if (!check_upper_height(sounde.back())) {
-                std::cout << "Upper sounding height is lower then " << minHeight 
-                    << " at day " << current_day << '\n';
+                std::wcout << L"Upper sounding height is lower then " << minHeight 
+                    << L" at day " << current_day << '\n';
                 continue;
             }
 
@@ -434,9 +450,19 @@ int main() {
             calculated_components.back().hour = observ_hour;
             calculated_components.back().day = current_day;
 
+            calc_out << "day " << current_day << " hour " << hour << "\n";
+            auto float_comp = [](double a, double b, double epsilon = 0.01) { return std::fabs(a - b) <= epsilon; };
+            for (auto& el : sounde) {
+                if (el.H > gnss_station_height || float_comp(el.H, gnss_station_height))
+                    el.dump_all(calc_out);
+            }
+            calc_out << "\n";
+
             sounde.clear();
         }
         fin.close();
+        std::wcout << L"Calculations saved to '" << input.calculation_filename << L"'\n";
+        calc_out.close();
 
     } else {
         std::cerr << "Opening file error\n";
@@ -444,18 +470,18 @@ int main() {
     }
 #endif
 
-    std::fstream fout;
-    fout.open(input.out_filename, std::ios::out);
-    if (fout.is_open()) {
-        fout << "d_h aer    d_w aer    d_h SA    d_w SA\n";
+    std::fstream res_out;
+    res_out.open(input.out_filename, std::ios::out);
+    if (res_out.is_open()) {
+        res_out << "d_h aer    d_w aer    d_h SA    d_w SA\n";
         for (auto& el : calculated_components) {
-            fout << std::setprecision(2) << std::fixed;
-            fout << el.hydrostatic << "    " << el.hydrostatic_SA << "    "
-                << el.wet << "    " << el.wet_SA << "\n";
+            el.dump(res_out);
         }
-        std::wcout << L"Calculation saved to '" << input.out_filename << L"'\n";
+
+        std::wcout << L"Result saved to '" << input.out_filename << L"'\n";
         std::wcout << L"--------------------------------------------------------\n";
-        fout.close();
+        
+        res_out.close();
     } else {
         std::cerr << "Creating file error\n";
         return -1;
