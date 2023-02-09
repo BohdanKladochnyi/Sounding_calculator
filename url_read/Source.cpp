@@ -303,9 +303,11 @@ void supplement_sounding(std::vector<PresTempHum>& sounde) {
     };
 
     size_t i = 0;
-    while (SMA[i].P > sounde.back().P)
+    auto float_comp = [](double a, double b, double epsilon = 0.01) { return std::fabs(a - b) <= epsilon; };
+
+    while (SMA[i].P > sounde.back().P || float_comp(SMA[i].P, sounde.back().P))
         ++i;
-    ++i;
+    
     while (i < 25) {
         sounde.push_back(SMA[i]);
         ++i;
