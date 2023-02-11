@@ -131,7 +131,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Source.cpp" />
+    <ClCompile Include="adds_on.cpp" />
+    <ClCompile Include="calculation.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="type_data.cpp" />
+    <ClCompile Include="user_input.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="adds_on.h" />
+    <ClInclude Include="calculation.h" />
+    <ClInclude Include="type_data.h" />
+    <ClInclude Include="user_input.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
