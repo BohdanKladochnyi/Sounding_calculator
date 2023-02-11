@@ -22,7 +22,7 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{dc9c4e88-62f8-421c-b517-c3c94ec166ee}</ProjectGuid>
-    <RootNamespace>urlread</RootNamespace>
+    <RootNamespace>soundingcalculator</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
