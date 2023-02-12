@@ -1,7 +1,6 @@
 #include <windows.h>
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -13,7 +12,6 @@
 
 #pragma comment(lib, "Urlmon.lib")
 
-extern const int minHeight;
 
 int main() {
     Input input = get_input();

@@ -4,43 +4,6 @@
 #include <iostream>
 
 #include "type_data.h"
-#include "adds_on.h"
-
-static int hours_input() {
-    std::string res;
-    int hour;
-    while (true) {
-        std::cin >> res;
-        std::cin.ignore(32767, '\n');
-
-        if (res.size() != 2) {
-            std::cout << "Invaid input. Please, try again: ";
-            continue;
-        }
-
-        bool err = false;
-        for (size_t i = 0; i < 2; i++) {
-            if (!std::isdigit(res[i])) {
-                err = true;
-                break;
-            }
-        }
-        if (err) {
-            std::cout << "Invaid input. Please, try again: ";
-            continue;
-        }
-
-        res.append(" "); //dummy fix for next function call
-        hour = convert_hours(res, 0);
-
-        if ((hour != 0) && (hour != 6) && (hour != 12) && (hour != 18)) {
-            std::cout << "Invaid input. Please, try again: ";
-            continue;
-        }
-
-        return hour;
-    }
-}
 
 static double numbers_input() {
     double res;
@@ -93,9 +56,12 @@ static std::wstring get_digits(size_t count) {
 
 GNSS_station input_station_parameters() {
     GNSS_station station;
+    std::wstring hour;
 
     std::cout << "Enter observation hour (00, 06, 12, 18): ";
-    station.hour = hours_input();
+    hour = get_digits(2);
+    station.hour = std::stoi(hour);
+
 
     std::cout << "Enter GNSS station height (meters): ";
     station.height = numbers_input();

@@ -4,13 +4,13 @@
 #include <vector>
 #include "type_data.h"
 
-const int minHeight = 28500;
+extern const int minHeight;
 
 int convert_hours(std::string_view str, std::string::size_type pos);
 
 bool is_number_row(std::string_view str);
 
-std::vector<double> string_to_vector(const std::string& str);
+std::vector<double> string_to_vector(std::string_view str);
 
 bool check_upper_height(PresTempHum obj);
 
