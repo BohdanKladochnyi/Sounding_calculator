@@ -59,14 +59,14 @@ int main() {
         }
 
         while (std::getline(fin, tp)) {
-            auto pos = search_for_observation_time(tp);
+            auto pos = tp.find("Observations at ");
             int hour = -1;
 
             while (hour != station.hour) {
                 std::getline(fin, tp);
                 if (fin.eof())
                     break;
-                pos = search_for_observation_time(tp);
+                pos = tp.find("Observations at ");
 
                 if (pos != std::string::npos) {
                     hour = std::stoi(&tp[pos + 16]); //plus size of 'Observations at '

@@ -84,7 +84,3 @@ PresTempHum filter_row(std::vector<double>& row) {
     PresTempHum obj = { row[0], row[1], row[2], row[4] };
     return obj;
 }
-
-std::string::size_type search_for_observation_time(std::string_view str) {
-    return str.find("Observations at ");
-}
