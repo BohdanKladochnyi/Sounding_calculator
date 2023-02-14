@@ -91,10 +91,10 @@ Input get_input() {
     std::cout << "Enter final date (01, 02, ... 31: ";
     date_to = get_digits(2);
 
-    res.in_filename = station + L"_" + year + month + date_from + L"_" + date_to + L"_sounding.txt";
-    res.out_filename = station + L"_" + year + month + date_from + L"_" + date_to + L"_result.txt";
+    res.in_filename = station + L"_" + year + L"_" + month + L"_" + date_from + L"_" + date_to + L"_sounding.txt";
+    res.out_filename = station + L"_" + year + L"_" + month + L"_" + date_from + L"_" + date_to + L"_result.txt";
 
-    res.calculation_filename = station + L"_" + year + month + date_from + L"_" + date_to + L"_calculation.txt";
+    res.calculation_filename = station + L"_" + year + L"_" + month + L"_" + date_from + L"_" + date_to + L"_calculation.txt";
 
     res.url = L"https://weather.uwyo.edu/cgi-bin/sounding?region=naconf&TYPE=TEXT%3ALIST&YEAR="
         + year + L"&MONTH=" + month + L"&FROM=" + date_from + L"00&TO=" + date_to + L"18&STNM=" + station;

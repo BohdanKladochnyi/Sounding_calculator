@@ -6,7 +6,7 @@
 
 #include "type_data.h"
 
-const int minHeight = 29500;
+const int minHeight = 28500;
 
 bool is_number_row(std::string_view str) {
     if (str.empty()) return false;

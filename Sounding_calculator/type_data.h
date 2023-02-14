@@ -20,7 +20,7 @@ struct Components final {
     double hydrostatic_SA;
     double wet_SA;
 
-    int hour, day;
+    int day;
 
     void dump(std::ostream& os) const;
 };
