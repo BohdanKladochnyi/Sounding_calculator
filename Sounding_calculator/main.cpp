@@ -102,7 +102,7 @@ int main() {
             calculated_components.back().day = current_day;
 
             calc_out << "day " << current_day << " hour " << hour << "\n";
-            calc_out << "P        H        T (C)   U       e       T (K)    Nd       Nw      Dd      Dw      Zw\n";
+            calc_out << "     P          H       T(C)     U       e      T(K)      Nd       Nw       Dd      Dw       Zw\n";
             auto float_comp = [](double a, double b, double epsilon = 0.01) { return std::fabs(a - b) <= epsilon; };
             for (auto& el : sounde) {
                 if (el.H > station.height || float_comp(el.H, station.height))
@@ -125,7 +125,7 @@ int main() {
     std::fstream res_out;
     res_out.open(input.out_filename, std::ios::out);
     if (res_out.is_open()) {
-        res_out << "day    d_h aer    d_w aer    d_h SA    d_w SA\n";
+        res_out << "day d_h aer  d_w aer  d_h SA  d_w SA\n";
         for (auto& el : calculated_components) {
             el.dump(res_out);
         }

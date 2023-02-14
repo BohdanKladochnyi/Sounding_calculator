@@ -32,10 +32,6 @@ std::vector<double> string_to_vector(std::string_view str) {
     std::vector<double> row;
     row.reserve(11);
 
-    /*std::stringstream ss(str);
-    while (ss >> std::skipws >> number)
-        row.push_back(number);*/
-
     while (start != str.cend()) {
         while (std::isspace(*start)) {
             ++start;
@@ -72,7 +68,7 @@ bool check_upper_height(PresTempHum obj) {
         return false;
     return true;
     
-    //maybe should rewrite as follows with seek
+    //maybe should rewrite as follows with 'file seek'
     //remember position
     //read to last row
     //read row to vector
