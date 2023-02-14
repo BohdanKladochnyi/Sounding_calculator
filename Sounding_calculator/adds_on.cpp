@@ -1,19 +1,12 @@
 #include "adds_on.h"
 
 #include <string_view>
-#include <charconv>
 #include <string>
 #include <vector>
 
 #include "type_data.h"
 
-const int minHeight = 30000;
-
-int convert_hours(std::string_view str, std::string::size_type pos) {
-    int result = 0;
-    std::from_chars(&str[pos], &str[pos + 2], result);
-    return result;
-}
+const int minHeight = 29500;
 
 bool is_number_row(std::string_view str) {
     if (str.empty()) return false;

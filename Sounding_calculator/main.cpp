@@ -69,8 +69,8 @@ int main() {
                 pos = search_for_observation_time(tp);
 
                 if (pos != std::string::npos) {
-                    hour = convert_hours(tp, pos + 16); //plus size of 'Observations at '
-                    current_day = convert_hours(tp, pos + 20); //yes, works also with days
+                    hour = std::stoi(&tp[pos + 16]); //plus size of 'Observations at '
+                    current_day = std::stoi(&tp[pos + 20]);
                 }
             }
             

@@ -6,8 +6,6 @@
 
 extern const int minHeight;
 
-int convert_hours(std::string_view str, std::string::size_type pos);
-
 bool is_number_row(std::string_view str);
 
 std::vector<double> string_to_vector(std::string_view str);
