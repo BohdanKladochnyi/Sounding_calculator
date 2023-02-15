@@ -22,23 +22,23 @@ static PresTempHum interpolate(PresTempHum fst, PresTempHum scnd, double height)
     return res;
 }
 
-void insert_interpolating(std::vector<PresTempHum>& sounde, double height) {
+void insert_interpolating(std::vector<PresTempHum>& sounding, double height) {
     size_t i = 0;
     PresTempHum res;
 
-    if (sounde[0].H > height) {
-        res = interpolate(sounde[0], sounde[1], height);
-        sounde.insert(sounde.begin(), res);
+    if (sounding[0].H > height) {
+        res = interpolate(sounding[0], sounding[1], height);
+        sounding.insert(sounding.begin(), res);
         return;
     }
 
-    while (sounde[i].H < height)
+    while (sounding[i].H < height)
         ++i;
 
-    sounde[i - 1] = interpolate(sounde[i - 1], sounde[i], height);
+    sounding[i - 1] = interpolate(sounding[i - 1], sounding[i], height);
 }
 
-void supplement_sounding(std::vector<PresTempHum>& sounde) {
+void supplement_sounding(std::vector<PresTempHum>& sounding) {
     static PresTempHum SMA[25] = {
         { 11.970, 30000.0, -46.641, 0.0 },
         { 10.313, 31000.0, -45.650, 0.0 },
@@ -70,61 +70,61 @@ void supplement_sounding(std::vector<PresTempHum>& sounde) {
     size_t i = 0;
     auto float_comp = [](double a, double b, double epsilon = 0.01) { return std::fabs(a - b) <= epsilon; };
 
-    while (SMA[i].P > sounde.back().P || float_comp(SMA[i].P, sounde.back().P))
+    while (SMA[i].P > sounding.back().P || SMA[i].H < sounding.back().H)
         ++i;
 
     while (i < 25) {
-        sounde.push_back(SMA[i]);
+        sounding.push_back(SMA[i]);
         ++i;
     }
 
 }
 
-Components calculate_components(std::vector<PresTempHum>& sounde, GNSS_station station) {
+Components calculate_components(std::vector<PresTempHum>& sounding, GNSS_station station) {
     Components res = { 0, 0, 0, 0 };
     size_t i;
 
-    for (i = 0; i != sounde.size(); ++i) {
-        sounde[i].e = sounde[i].U / 100.0 * 6.11 * std::pow(10.0,
-            ((8.62 * sounde[i].T) / (273.15 + sounde[i].T)));
+    for (i = 0; i != sounding.size(); ++i) {
+        sounding[i].e = sounding[i].U / 100.0 * 6.11 * std::pow(10.0,
+            ((8.62 * sounding[i].T) / (273.15 + sounding[i].T)));
 
-        sounde[i].T_k = sounde[i].T + 273.15;
+        sounding[i].T_k = sounding[i].T + 273.15;
 
-        sounde[i].N_d = 77.624 * sounde[i].P / sounde[i].T_k *
-            (1 - 0.378 * sounde[i].e / sounde[i].P);
+        sounding[i].N_d = 77.624 * sounding[i].P / sounding[i].T_k *
+            (1 - 0.378 * sounding[i].e / sounding[i].P);
 
-        sounde[i].Z_w = 1 + 1650.0 * (sounde[i].e / std::pow(sounde[i].T_k, 3)) *
-            (1.0 - 0.01317 * sounde[i].T + 1.75 * std::pow(10.0, -4) *
-                std::pow(sounde[i].T, 2) + 1.44 * std::pow(10.0, -6) *
-                std::pow(sounde[i].T, 3));
+        sounding[i].Z_w = 1 + 1650.0 * (sounding[i].e / std::pow(sounding[i].T_k, 3)) *
+            (1.0 - 0.01317 * sounding[i].T + 1.75 * std::pow(10.0, -4) *
+                std::pow(sounding[i].T, 2) + 1.44 * std::pow(10.0, -6) *
+                std::pow(sounding[i].T, 3));
 
-        sounde[i].N_w = ((64.7 - 77.624 * 0.622) * sounde[i].e / sounde[i].T_k +
-            371900.0 * sounde[i].e / std::pow(sounde[i].T_k, 2)) * sounde[i].Z_w;
+        sounding[i].N_w = ((64.7 - 77.624 * 0.622) * sounding[i].e / sounding[i].T_k +
+            371900.0 * sounding[i].e / std::pow(sounding[i].T_k, 2)) * sounding[i].Z_w;
     }
 
-    for (i = 0; i != sounde.size() - 1; ++i) {
-        sounde[i].D_d = (sounde[i].N_d + sounde[i + 1].N_d) / 2.0 *
-            (sounde[i + 1].H - sounde[i].H) / 1000.0;
+    for (i = 0; i != sounding.size() - 1; ++i) {
+        sounding[i].D_d = (sounding[i].N_d + sounding[i + 1].N_d) / 2.0 *
+            (sounding[i + 1].H - sounding[i].H) / 1000.0;
 
-        sounde[i].D_w = (sounde[i].N_w + sounde[i + 1].N_w) / 2.0 *
-            (sounde[i + 1].H - sounde[i].H) / 1000.0;
+        sounding[i].D_w = (sounding[i].N_w + sounding[i + 1].N_w) / 2.0 *
+            (sounding[i + 1].H - sounding[i].H) / 1000.0;
     }
 
     auto float_comp = [](double a, double b, double epsilon = 0.01) { return std::fabs(a - b) <= epsilon; };
     i = 0;
-    while (!float_comp(sounde[i].H, station.height))
+    while (!float_comp(sounding[i].H, station.height))
         ++i;
 
     double rad_phi = station.phi * 3.14159 / 180.0;
 
-    res.hydrostatic_SA = 0.002277 * sounde[i].P / (1 - 0.0026 * std::cos(2.0 * rad_phi) -
+    res.hydrostatic_SA = 0.002277 * sounding[i].P / (1 - 0.0026 * std::cos(2.0 * rad_phi) -
         28.0 * std::pow(10.0, -8) * station.height) * 1000.0;
 
-    res.wet_SA = (0.002277 * (1255.0 / sounde[i].T_k + 0.05) * sounde[i].e) * 1000.0;
+    res.wet_SA = (0.002277 * (1255.0 / sounding[i].T_k + 0.05) * sounding[i].e) * 1000.0;
 
-    for (; i != sounde.size(); ++i) {
-        res.hydrostatic += sounde[i].D_d;
-        res.wet += sounde[i].D_w;
+    for (; i != sounding.size(); ++i) {
+        res.hydrostatic += sounding[i].D_d;
+        res.wet += sounding[i].D_w;
     }
 
     return res;
