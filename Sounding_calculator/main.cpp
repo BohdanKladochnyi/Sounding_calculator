@@ -76,7 +76,7 @@ int main() {
             //reads all data from certain sounding
             while (is_number_row(tp)) {
                 std::vector<double> row = string_to_vector(tp);
-                if (row.size() == 11)
+                if (row.size() == 5)
                     sounding.push_back(filter_row(row));
                 std::getline(input_soundings, tp);
                 if (input_soundings.eof()) break;

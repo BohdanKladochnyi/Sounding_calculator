@@ -30,15 +30,17 @@ std::vector<double> string_to_vector(std::string_view str) {
     auto fin = str.cend();
 
     std::vector<double> row;
-    row.reserve(11);
+    row.reserve(5);
 
+    size_t space_counter = 0;
     while (start != str.cend()) {
         while (std::isspace(*start)) {
             ++start;
+            ++space_counter;
             if (start == str.cend())
                 break;
         }
-
+        if (space_counter > 6) break;
         if (start == str.cend())
             break;
 
@@ -49,15 +51,15 @@ std::vector<double> string_to_vector(std::string_view str) {
                 break;
         }
 
-        std::string tp(start, fin);
-
-        number = std::stof(tp);
+        number = std::stof(&(*start));
         row.push_back(number);
+        if (row.size() == 5) break;
         
         if (fin == str.cend())
             break;
 
         start = fin;
+        space_counter = 0;
     }
     
     return row;
