@@ -23,6 +23,7 @@ struct Components final {
     int day;
 
     void dump(std::ostream& os) const;
+    void dump_calc(std::ostream& os) const;
 };
 
 struct Input final {

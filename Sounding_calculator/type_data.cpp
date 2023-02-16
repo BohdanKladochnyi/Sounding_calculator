@@ -26,3 +26,11 @@ void Components::dump(std::ostream& os) const {
     os << std::setw(2) << day << std::setw(9) << hydrostatic << std::setw(8) << wet << std::setw(9)
         << hydrostatic_SA << std::setw(8) << wet_SA << "\n";
 }
+
+void Components::dump_calc(std::ostream& os) const {
+    os << std::setprecision(2) << std::fixed;
+    os << "                                                              Aerology:"
+        << std::setw(9) << hydrostatic << std::setw(8) << wet << "\n";
+    os << "                                                          Saastamoinen:"
+        << std::setw(9) << hydrostatic_SA << std::setw(8) << wet_SA << "\n";
+}

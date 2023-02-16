@@ -100,13 +100,18 @@ int main() {
             tropo_delay.push_back(calculate_components(sounding, station));
             tropo_delay.back().day = current_day;
 
+            //dump in calculation file
             calc_out << "day " << current_day << " hour " << hour << "\n";
-            calc_out << "     P          H       T(C)     U       e      T(K)      Nd       Nw       Dd      Dw       Zw\n";
-            auto float_comp = [](double a, double b, double epsilon = 0.01) { return std::fabs(a - b) <= epsilon; };
+            calc_out << "     P          H       T(C)     U       e      "
+                << "T(K)      Nd       Nw       Dd      Dw       Zw\n";
+            auto float_comp = [](double a, double b, double epsilon = 0.01)
+                                    { return std::fabs(a - b) <= epsilon; };
             for (auto& el : sounding) {
                 if (el.H > station.height || float_comp(el.H, station.height))
                     el.dump_all(calc_out);
             }
+
+            tropo_delay.back().dump_calc(calc_out);
             calc_out << "\n";
 
             sounding.clear();
@@ -121,6 +126,7 @@ int main() {
         return -1;
     }
 
+    //dump in result file
     std::fstream res_out;
     res_out.open(input.out_filename, std::ios::out);
     if (res_out.is_open()) {
