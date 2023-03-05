@@ -104,6 +104,7 @@ int main() {
             calc_out << "day " << current_day << " hour " << hour << "\n";
             calc_out << "     P          H       T(C)     U       e      "
                 << "T(K)      Nd       Nw       Dd      Dw       Zw\n";
+
             auto float_comp = [](double a, double b, double epsilon = 0.01)
                                     { return std::fabs(a - b) <= epsilon; };
             for (auto& el : sounding) {

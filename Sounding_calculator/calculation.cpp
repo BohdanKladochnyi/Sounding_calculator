@@ -68,7 +68,6 @@ void supplement_sounding(std::vector<PresTempHum>& sounding) {
     };
 
     size_t i = 0;
-    auto float_comp = [](double a, double b, double epsilon = 0.01) { return std::fabs(a - b) <= epsilon; };
 
     while (SMA[i].P > sounding.back().P || SMA[i].H < sounding.back().H)
         ++i;
