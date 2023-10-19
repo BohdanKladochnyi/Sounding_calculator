@@ -3,7 +3,7 @@
 #include <vector>
 #include "type_data.h"
 
-extern const int minHeight;
+extern int minHeight;
 
 bool is_number_row(std::string_view str);
 
