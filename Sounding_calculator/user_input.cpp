@@ -5,8 +5,6 @@
 
 #include "type_data.h"
 
-int minHeight;
-
 static double numbers_input() {
     double res;
 
@@ -70,10 +68,6 @@ GNSS_station input_station_parameters() {
 
     std::cout << "Enter GNSS station lattitude (decimal degrees): ";
     station.phi = numbers_input();
-
-    std::cout << "Enter minimum sounding altitude cutoff (meters): ";
-    minHeight = numbers_input();
-
 
     return station;
 }
