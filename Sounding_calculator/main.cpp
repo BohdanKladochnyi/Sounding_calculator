@@ -78,6 +78,8 @@ int main() {
                 std::vector<double> row = string_to_vector(tp);
                 if (row.size() == 5)
                     sounding.push_back(filter_row(row));
+                if (row.size() == 3 && row[1] > 10000.0)
+                    sounding.push_back(filter_short_row(row)); //if humidity is absent
                 std::getline(input_soundings, tp);
                 if (input_soundings.eof()) break;
             }

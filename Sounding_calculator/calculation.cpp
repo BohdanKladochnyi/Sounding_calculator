@@ -39,7 +39,17 @@ void insert_interpolating(std::vector<PresTempHum>& sounding, double height) {
 }
 
 void supplement_sounding(std::vector<PresTempHum>& sounding) {
-    static PresTempHum SMA[25] = {
+    static PresTempHum SMA[35] = {
+        { 55.293, 20000.0, -56.500, 0.0 },
+        { 47.289, 21000.0, -55.569, 0.0 },
+        { 40.475, 22000.0, -54.576, 0.0 },
+        { 34.668, 23000.0, -53.583, 0.0 },
+        { 29.717, 24000.0, -52.590, 0.0 },
+        { 25.492, 25000.0, -51.598, 0.0 },
+        { 21.884, 26000.0, -50.606, 0.0 },
+        { 18.800, 27000.0, -49.614, 0.0 },
+        { 16.162, 28000.0, -48.623, 0.0 },
+        { 13.904, 29000.0, -47.632, 0.0 },
         { 11.970, 30000.0, -46.641, 0.0 },
         { 10.313, 31000.0, -45.650, 0.0 },
         { 8.891, 32000.0, -44.660, 0.0 },
@@ -72,7 +82,7 @@ void supplement_sounding(std::vector<PresTempHum>& sounding) {
     while (SMA[i].P > sounding.back().P || SMA[i].H < sounding.back().H)
         ++i;
 
-    while (i < 25) {
+    while (i < sizeof(SMA) / sizeof(PresTempHum)) {
         sounding.push_back(SMA[i]);
         ++i;
     }

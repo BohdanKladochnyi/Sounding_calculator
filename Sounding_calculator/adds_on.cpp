@@ -80,3 +80,7 @@ PresTempHum filter_row(std::vector<double>& row) {
     PresTempHum obj = { row[0], row[1], row[2], row[4] };
     return obj;
 }
+PresTempHum filter_short_row(std::vector<double>& row) {
+    PresTempHum obj = { row[0], row[1], row[2], 0.0 };
+    return obj;
+}
