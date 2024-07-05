@@ -26,7 +26,9 @@ void insert_interpolating(std::vector<PresTempHum>& sounding, double height) {
     size_t i = 0;
     PresTempHum res;
 
-    if (sounding[0].H > height) {
+    auto float_comp = [](double a, double b, double epsilon = 0.01) { return std::fabs(a - b) <= epsilon; };
+
+    if (sounding[0].H > height || float_comp(sounding[0].H, height)) {
         res = interpolate(sounding[0], sounding[1], height);
         sounding.insert(sounding.begin(), res);
         return;
@@ -34,7 +36,6 @@ void insert_interpolating(std::vector<PresTempHum>& sounding, double height) {
 
     while (sounding[i].H < height)
         ++i;
-
     sounding[i - 1] = interpolate(sounding[i - 1], sounding[i], height);
 }
 

@@ -21,6 +21,7 @@ struct Components final {
     double wet_SA;
 
     int day;
+    double T;
 
     void dump(std::ostream& os) const;
     void dump_calc(std::ostream& os) const;

@@ -4,3 +4,5 @@
 GNSS_station input_station_parameters();
 
 Input get_input();
+
+void input_init_values();

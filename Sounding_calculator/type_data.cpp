@@ -23,8 +23,8 @@ void PresTempHum::dump_all(std::ostream& os) const {
 
 void Components::dump(std::ostream& os) const {
     os << std::setprecision(2) << std::fixed;
-    os << std::setw(2) << day << std::setw(9) << hydrostatic << std::setw(8) << wet << std::setw(9)
-        << hydrostatic_SA << std::setw(8) << wet_SA << "\n";
+    os << day << "\t" << hydrostatic << "\t" << wet << "\t"
+        << hydrostatic_SA << "\t" << wet_SA << "\t" << T << "\n";
 }
 
 void Components::dump_calc(std::ostream& os) const {
