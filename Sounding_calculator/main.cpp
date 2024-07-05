@@ -21,50 +21,21 @@ int main() {
 
         for (int i = 1; i <= 12; ++i) {
             if (i < 10) {
-                //input.calculation_filename[12] = L'0' + i;
-                //input.in_filename[12] = L'0' + i;
-                //input.out_filename[12] = L'0' + i;
                 input.url[90] = L'0' + i;
             }
             else {
-                //input.calculation_filename[11] = L'0' + 1;
-                //input.in_filename[11] = L'0' + 1;
-                //input.out_filename[11] = L'0' + 1;
                 input.url[89] = L'0' + 1;
-
-                //input.calculation_filename[12] = L'0' + i % 10;
-                //input.in_filename[12] = L'0' + i % 10;
-                //input.out_filename[12] = L'0' + i%10;
                 input.url[90] = L'0' + i % 10;
             }
 
             if (i == 2) {
-                //input.calculation_filename[17] = L'0' + 2;
-                //input.in_filename[17] = L'0' + 2;
-                //input.out_filename[17] = L'0' + 2;
                 input.url[105] = L'0' + 2;
-
-                //input.calculation_filename[18] = L'0' + 8;
-                //input.in_filename[18] = L'0' + 8;
-                //input.out_filename[18] = L'0' + 8;
                 input.url[106] = L'0' + 8;
             }
             else {
-                //input.calculation_filename[17] = L'0' + 3;
-                //input.in_filename[17] = L'0' + 3;
-                //input.out_filename[17] = L'0' + 3;
                 input.url[105] = L'0' + 3;
-
-                //input.calculation_filename[18] = L'0' + 0;
-                //input.in_filename[18] = L'0' + 0;
-                //input.out_filename[18] = L'0' + 0;
                 input.url[106] = L'0' + 0;
             }
-
-            /*std::wcout << input.calculation_filename << std::endl;
-            std::wcout << input.in_filename << std::endl;
-            std::wcout << input.out_filename << std::endl;
-            std::wcout << input.url << std::endl;*/
 
             std::wstring url_addr = input.url;
             std::wstring destFile = input.in_filename;
@@ -87,14 +58,6 @@ int main() {
 
             std::vector<PresTempHum> sounding;
             sounding.reserve(128);
-
-            /*std::fstream calc_out;
-            calc_out.open(input.calculation_filename, std::ios::app);
-            if (!calc_out.is_open()) {
-                std::cerr << "Creating file error\n";
-                input_soundings.close();
-                return -1;
-            }*/
 
             while (std::getline(input_soundings, tp)) {
                 auto pos = tp.find("Observations at ");
@@ -151,27 +114,10 @@ int main() {
                 tropo_delay.back().day = current_day;
                 tropo_delay.back().T = sounding[0].T;
 
-                //dump in calculation file
-                /*calc_out << "day " << current_day << " hour " << hour << "\n";
-                calc_out << "     P          H       T(C)     U       e      "
-                    << "T(K)      Nd       Nw       Dd      Dw       Zw\n";
-
-                auto float_comp = [](double a, double b, double epsilon = 0.01)
-                    { return std::fabs(a - b) <= epsilon; };
-                for (auto& el : sounding) {
-                    if (el.H > station.height || float_comp(el.H, station.height))
-                        el.dump_all(calc_out);
-                }
-
-                tropo_delay.back().dump_calc(calc_out);
-                calc_out << "\n";*/
-
                 sounding.clear();
             }
 
             input_soundings.close();
-            //calc_out.close();
-            //std::wcout << L"Calculations saved to '" << input.calculation_filename << L"'\n";
 
         } else {
             std::cerr << "Opening file error\n";

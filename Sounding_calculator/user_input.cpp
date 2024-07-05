@@ -72,22 +72,13 @@ void input_init_values() {
 
 GNSS_station input_station_parameters() {
     GNSS_station station;
-    //std::wstring hour;
-
-    //std::cout << "Enter observation hour (00, 06, 12, 18): ";
-    //hour = get_digits(2);
-    //station.hour = std::stoi(hour);
     station.hour = gHour;
-
 
     std::cout << "Enter GNSS station height (meters): ";
     station.height = numbers_input();
 
     std::cout << "Enter GNSS station lattitude (decimal degrees): ";
     station.phi = numbers_input();
-
-    //std::cout << "Enter minimum sounding altitude cutoff (meters): ";
-    //minHeight = numbers_input();
 
     return station;
 }
@@ -99,20 +90,9 @@ Input get_input() {
     std::cout << "Enter station number: ";
     station = get_digits(5);
 
-    //std::cout << "Enter a year: ";
-    //year = get_digits(4);
     year = gYear;
-
-    //std::cout << "Enter a month (01, 02 ... 12): ";
-    //month = get_digits(2);
     month = L"01";
-
-    //std::cout << "Enter start date (01, 02, ... 31): ";
-    //date_from = get_digits(2);
     date_from = L"01";
-
-    //std::cout << "Enter final date (01, 02, ... 31: ";
-    //date_to = get_digits(2);
     date_to = L"30";
 
     res.in_filename = station + L"_" + year + L"_" + month + L"_" + date_from + L"_" + date_to + L"_sounding.txt";
