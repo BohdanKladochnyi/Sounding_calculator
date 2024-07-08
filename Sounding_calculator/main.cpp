@@ -18,6 +18,7 @@ int main() {
     while (std::cin) {
         Input input = get_input();
         GNSS_station station = input_station_parameters();
+        std::wcout << L"\n--------------------------------------------------------\n";
 
         for (int i = 1; i <= 12; ++i) {
             if (i < 10) {
@@ -45,7 +46,6 @@ int main() {
                 Sleep(3000);
             }
         
-            std::wcout << L"--------------------------------------------------------\n";
             std::wcout << L"Sounding data saved to '" << input.in_filename << L"'\n";
             
             std::vector<Components> tropo_delay;
